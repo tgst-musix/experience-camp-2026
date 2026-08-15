@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./home.module.css";
 
 const asset = (path: string) => `${import.meta.env.BASE_URL}${path}`;
@@ -63,6 +63,31 @@ function PhotoFrame({ src, alt, portrait = false, position = "center" }: { src: 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [copyNotice, setCopyNotice] = useState(false);
+
+  useEffect(() => {
+    const elements = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (reduceMotion) {
+      elements.forEach((element) => element.classList.add(styles.isRevealed));
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add(styles.isRevealed);
+          observer.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.18, rootMargin: "0px 0px -8% 0px" },
+    );
+
+    elements.forEach((element) => observer.observe(element));
+    return () => observer.disconnect();
+  }, []);
+
   const shareSite = async () => { const data = { title: "2026 教會音樂碩士班體驗營", text: "兩天走進真實課堂、禮拜與校園生活，分辨你的下一步。", url: window.location.href }; try { if (navigator.share) await navigator.share(data); else await navigator.clipboard.writeText(window.location.href); } catch { /* 使用者取消 */ } };
   const copyRegistrationLink = async () => {
     try {
@@ -91,8 +116,8 @@ export default function Home() {
 
     <section className={styles.hero} id="top">
       <div className={styles.heroImage}><img src={asset("photos/hero-choir.webp")} alt="台灣神學院禮拜堂中的詩班與指揮" /><span className={styles.heroShade} /></div>
-      <div className={styles.heroCopy}><p className={styles.kicker}>2026 · 教會音樂碩士班體驗營</p><h1>從服事負擔，<br />走向<span>裝備與方向</span></h1><p className={styles.heroLead}>兩天走進真實課堂、禮拜與校園生活，體驗音樂、神學與教會服事如何彼此整合，分辨你的下一步。</p><div className={styles.heroActions}><a className={styles.primaryButton} href={registrationUrl} target="_blank" rel="noreferrer">立即報名 <i>↗</i></a><a className={styles.ghostButton} href="#contact">加入 LINE 詢問 ↓</a></div></div>
-      <aside className={styles.immersiveBadge} aria-label="兩天沉浸式體驗，探索你的音樂呼召"><span>兩天</span><strong>沉浸式體驗</strong><small>探索你的音樂呼召</small></aside>
+      <div className={`${styles.heroCopy} ${styles.revealFromLeft}`} data-reveal="true"><p className={styles.kicker}>2026 · 教會音樂碩士班體驗營</p><h1>從服事負擔，<br />走向<span>裝備與方向</span></h1><p className={styles.heroLead}>兩天走進真實課堂、禮拜與校園生活，體驗音樂、神學與教會服事如何彼此整合，分辨你的下一步。</p><div className={styles.heroActions}><a className={styles.primaryButton} href={registrationUrl} target="_blank" rel="noreferrer">立即報名 <i>↗</i></a><a className={styles.ghostButton} href="#contact">加入 LINE 詢問 ↓</a></div></div>
+      <aside className={`${styles.immersiveBadge} ${styles.revealFromRight}`} data-reveal="true" aria-label="兩天沉浸式體驗，探索你的音樂呼召"><span>兩天</span><strong>沉浸式體驗</strong><small>探索你的音樂呼召</small></aside>
       <div className={styles.heroMeta}><span><b>DATE <em>營會日期</em></b><strong>10.12–13</strong></span><span><b>PLACE <em>地點</em></b><strong>台灣神學院</strong></span><span><b>LIMIT <em>名額限制</em></b><strong>40 名</strong></span><span><b>DEADLINE <em>報名截止</em></b><strong>10.01</strong></span></div>
       <p className={styles.artNote}>台灣神學院禮拜堂與詩班實景</p>
     </section>
@@ -103,13 +128,13 @@ export default function Home() {
 
     <section className={`${styles.section} ${styles.experience}`} id="experience"><div className={styles.sectionHeading}><p className={styles.eyebrow}>TWO DAYS · THREE DISCOVERIES</p><h2>兩天體驗，<br />帶你看見<span>未來的可能</span></h2></div><div className={styles.experienceGrid}><article><span>01</span><div><p>走進真實課堂</p><h3>親身感受學習現場</h3><small>感受課堂方式、師生互動與校園學習環境。</small></div></article><article><span>02</span><div><p>看見整合教育</p><h3>連結音樂、神學與禮拜</h3><small>理解音樂專業、神學思考、禮拜實踐與教會服事如何彼此連結。</small></div></article><article><span>03</span><div><p>分辨服事方向</p><h3>更具體思考你的下一步</h3><small>透過課程、禮拜、分享與交流，思考是否需要進一步裝備。</small></div></article></div></section>
 
-    <section className={`${styles.section} ${styles.learning}`}><div className={styles.learningVisual}><div className={styles.learningPhotoCollage}><img className={styles.learningMainPhoto} src={asset("photos/learning-classroom-graded-v2.webp")} alt="台灣神學院教室中的課堂實景" loading="lazy" /><img className={styles.learningInsetPhoto} src={asset("photos/learning-organ-graded-v2.webp")} alt="尚傑生老師於管風琴前示範" loading="lazy" /><span>真實課堂 × 專業實作</span></div><div className={styles.musicWords}><span>MUSIC</span><span>THEOLOGY</span><span>WORSHIP</span></div></div><div><p className={styles.eyebrow}>LEARNING EXPERIENCE</p><h2>不只是學音樂，<br />而是理解<span>如何服事</span></h2><div className={styles.learningList}><div><b>神學思考</b><span>神學與音樂、神學導論、新約導論</span></div><div><b>音樂專業</b><span>聲樂、手鐘、管風琴、詩班排練</span></div><div><b>禮拜實踐</b><span>禮拜程序演練、全校大禮拜</span></div><div><b>服事與分辨</b><span>事工分享、教牧價值、Q&A、音樂特會</span></div></div></div></section>
+    <section className={`${styles.section} ${styles.learning}`}><div className={`${styles.learningVisual} ${styles.revealFromLeft}`} data-reveal="true"><div className={styles.learningPhotoCollage}><img className={styles.learningMainPhoto} src={asset("photos/learning-classroom-graded-v2.webp")} alt="台灣神學院教室中的課堂實景" loading="lazy" /><img className={styles.learningInsetPhoto} src={asset("photos/learning-organ-graded-v2.webp")} alt="尚傑生老師於管風琴前示範" loading="lazy" /><span>真實課堂 × 專業實作</span></div><div className={styles.musicWords}><span>MUSIC</span><span>THEOLOGY</span><span>WORSHIP</span></div></div><div className={styles.revealFromRight} data-reveal="true"><p className={styles.eyebrow}>LEARNING EXPERIENCE</p><h2>不只是學音樂，<br />而是理解<span>如何服事</span></h2><div className={styles.learningList}><div><b>神學思考</b><span>神學與音樂、神學導論、新約導論</span></div><div><b>音樂專業</b><span>聲樂、手鐘、管風琴、詩班排練</span></div><div><b>禮拜實踐</b><span>禮拜程序演練、全校大禮拜</span></div><div><b>服事與分辨</b><span>事工分享、教牧價值、Q&A、音樂特會</span></div></div></div></section>
 
     <section className={`${styles.section} ${styles.schedule}`} id="schedule"><div className={`${styles.sectionHeading} ${styles.scheduleHeading}`}><p className={styles.eyebrow}>SCHEDULE</p><h2>兩日完整日程</h2><p>先看當日重點，再展開完整時程。課程與場地可能依實際安排微調，最新資訊以主辦單位公告為準。</p></div><div className={styles.dayCards}><details><summary><span className={styles.dayNumber}>01</span><span><small>10 月 12 日（一）</small><b>音樂專業、詩班排練<br />與音樂特會</b></span><em><span>查看完整時程</span><i aria-hidden="true">＋</i></em></summary><ScheduleRows items={dayOne} /></details><details><summary><span className={styles.dayNumber}>02</span><span><small>10 月 13 日（二）</small><b>神學課程、事工分享<br />與全校禮拜</b></span><em><span>查看完整時程</span><i aria-hidden="true">＋</i></em></summary><ScheduleRows items={dayTwo} /></details></div></section>
 
     <section className={`${styles.section} ${styles.faculty}`} id="faculty"><div className={`${styles.sectionHeading} ${styles.facultyHeading}`}><p className={styles.eyebrow}>FACULTY &amp; GUIDES</p><h2>陪你走進真實的<br /><span>學習現場</span></h2><p className={styles.facultySubtitle}>從神學、聲樂、手鐘、管風琴到詩班排練，由各領域師資帶你實際走進教會音樂的學習現場。</p></div><div className={styles.facultyGrid}>{faculty.map(({ name, role, image, position }, i) => <article key={name}><PhotoFrame src={image} alt={`${name}師資照片`} portrait position={position} /><div><span>0{i + 1}</span><h3>{name}</h3><p>{role}</p></div></article>)}</div><div className={styles.guideHeading}><p className={styles.eyebrow}>STORIES &amp; SPECIAL SESSION</p><h3>事工分享與音樂特會</h3></div><div className={styles.guideGrid}>{guides.map(({ name, role, image, position }) => <article key={name}><PhotoFrame src={image} alt={`${name}照片`} portrait position={position} /><div><h3>{name}</h3><p>{role}</p></div></article>)}</div></section>
 
-    <section className={`${styles.section} ${styles.program}`}><div><p className={styles.eyebrow}>CHURCH MUSIC MASTER</p><h2>在音樂、神學與教會之間，<br />成為<span>連結的橋樑</span></h2><p>教會音樂的裝備不只關乎演奏與歌唱，也包含禮拜理解、神學思考、溝通協作與教會現場的實踐。</p><a className={styles.inlineLink} href={programUrl} target="_blank" rel="noreferrer">認識碩士班課程 ↗</a></div><PhotoFrame src={asset("photos/campus-chapel.webp")} alt="台灣神學院禮拜堂與校園景觀" /></section>
+    <section className={`${styles.section} ${styles.program}`}><div className={styles.revealFromLeft} data-reveal="true"><p className={styles.eyebrow}>CHURCH MUSIC MASTER</p><h2>在音樂、神學與教會之間，<br />成為<span>連結的橋樑</span></h2><p>教會音樂的裝備不只關乎演奏與歌唱，也包含禮拜理解、神學思考、溝通協作與教會現場的實踐。</p><a className={styles.inlineLink} href={programUrl} target="_blank" rel="noreferrer">認識碩士班課程 ↗</a></div><div className={`${styles.programPhotoReveal} ${styles.revealFromRight}`} data-reveal="true"><PhotoFrame src={asset("photos/campus-chapel.webp")} alt="台灣神學院禮拜堂與校園景觀" /></div></section>
 
     <section className={`${styles.section} ${styles.pastor}`} id="pastors"><div className={styles.pastorLabel}><span>FOR</span>給牧者</div><div><p className={styles.eyebrow}>SUPPORT THE NEXT STEP</p><h2>推薦一位有負擔的同工，<br />給他兩天<span>真實探索</span>的機會</h2><p>教會中的音樂服事者，往往同時站在音樂、禮拜、牧者與會眾之間。他們需要的不只是技巧，也需要神學理解、溝通能力與服事方向。</p></div><div className={styles.pastorActions}><h3>牧者可以這樣支持</h3><ul><li>推薦合適的音樂同工參加</li><li>提供兩天服事排班上的彈性</li><li>視教會情況支持報名、交通或住宿費</li><li>陪伴同工為進修與服事方向禱告</li></ul><div><button className={styles.primaryButton} type="button" onClick={copyRegistrationLink}>複製報名連結</button><button className={styles.ghostButton} type="button" onClick={shareSite}>分享網站</button></div></div></section>
 
