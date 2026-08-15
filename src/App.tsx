@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import styles from "./home.module.css";
 
 const asset = (path: string) => `${import.meta.env.BASE_URL}${path}`;
@@ -58,6 +58,9 @@ const faqs = [
 function ScheduleRows({ items }: { items: string[][] }) { return <div className={styles.scheduleRows}>{items.map(([time, title, place]) => <div className={styles.scheduleRow} key={`${time}-${title}`}><time>{time}</time><strong>{title}</strong><span>{place}</span></div>)}</div>; }
 function PhotoFrame({ src, alt, portrait = false, position = "center" }: { src: string; alt: string; portrait?: boolean; position?: string }) {
   return <div className={`${styles.photoFrame} ${portrait ? styles.portrait : ""}`}><img src={src} alt={alt} style={{ objectPosition: position }} loading="lazy" /></div>;
+}
+function HandwrittenText({ text, startIndex = 0 }: { text: string; startIndex?: number }) {
+  return <>{Array.from(text).map((char, index) => <span key={`${char}-${index}`} className={styles.handwrittenChar} aria-hidden="true" style={{ "--char-index": startIndex + index } as CSSProperties}>{char === " " ? "\u00A0" : char}</span>)}</>;
 }
 
 export default function Home() {
@@ -122,7 +125,7 @@ export default function Home() {
       <p className={styles.artNote}>台灣神學院禮拜堂與詩班實景</p>
     </section>
 
-    <section className={styles.handwrittenStatement} aria-label="活動核心宣言"><p>不只是音樂，<br />而是回應呼召的生命。</p><i aria-hidden="true" /></section>
+    <section className={styles.handwrittenStatement} data-reveal="true" aria-label="活動核心宣言"><p aria-label="不只是音樂，而是回應呼召的生命。"><span className={styles.handwritingLine}><HandwrittenText text="不只是音樂，" /></span><span className={styles.handwritingLine}><HandwrittenText text="而是回應呼召的生命。" startIndex={7} /></span></p><i aria-hidden="true" /></section>
 
     <section className={`${styles.section} ${styles.audience}`}><div className={styles.sectionHeading}><p className={styles.eyebrow}>IS THIS FOR YOU?</p><h2 className={styles.audienceTitle}>這個營會<br /><span>適合我嗎？</span></h2></div><div className={styles.audienceList}>{["已經投入教會音樂服事，卻逐漸遇到瓶頸", "想更深入理解音樂、神學與禮拜的關係", "對教會音樂有負擔，但不知道如何進一步裝備", "剛離開大學，正在探索未來與服事方向", "沒有音樂本科背景，擔心自己是否適合"].map((item, i) => <div key={item}><span>0{i + 1}</span><p>{item}</p></div>)}</div><p className={styles.audienceNote}>不限音樂科系背景。歡迎正在參與教會音樂服事，或對教會音樂事工與進修方向有負擔的你。</p></section>
 
@@ -142,7 +145,7 @@ export default function Home() {
 
     <section className={`${styles.section} ${styles.faq}`} id="faq"><div className={styles.sectionHeading}><p className={styles.eyebrow}>FAQ</p><h2>常見問題</h2></div><div className={styles.faqList}>{faqs.map(([question, answer]) => <details key={question}><summary>{question}<span>＋</span></summary><p>{answer}</p></details>)}</div></section>
 
-    <section className={styles.finalCta} id="contact"><div><p className={styles.eyebrow}>2026 CHURCH MUSIC CAMP</p><p className={styles.finalHandwriting}>也許，這就是你回應呼召的下一步。</p><h2>也許你不需要現在就決定未來，<br />但可以先走進來，<span>真實體驗。</span></h2><p>限額 40 名｜10 月 1 日截止報名</p><div><a className={styles.primaryButton} href={registrationUrl} target="_blank" rel="noreferrer">立即報名 ↗</a><a className={styles.ghostButton} href={lineUrl} target="_blank" rel="noreferrer">加入 LINE 詢問 ↗</a></div></div></section>
+    <section className={styles.finalCta} id="contact" data-reveal="true"><div><p className={styles.eyebrow}>2026 CHURCH MUSIC CAMP</p><p className={styles.finalHandwriting} aria-label="也許，這就是你回應呼召的下一步。"><HandwrittenText text="也許，這就是你回應呼召的下一步。" /></p><h2 className={styles.finalHeadline}>也許你不需要現在就決定未來，<br />但可以先走進來，<span>真實體驗。</span></h2><p className={styles.finalMeta}>限額 40 名｜10 月 1 日截止報名</p><div className={styles.finalActions}><a className={styles.primaryButton} href={registrationUrl} target="_blank" rel="noreferrer">立即報名 ↗</a><a className={styles.ghostButton} href={lineUrl} target="_blank" rel="noreferrer">加入 LINE 詢問 ↗</a></div></div></section>
 
     <footer className={styles.footer}><div className={styles.footerBrand}><img className={styles.footerLogo} src={asset("church-music-logo.png")} alt="台灣神學研究學院教會音樂組 Logo" /><p>台灣神學院<br />教會音樂碩士班</p></div><div><b>活動資訊</b><a href="#experience">活動特色</a><a href="#schedule">兩日行程</a><a href="#info">參加資訊</a></div><div><b>快速連結</b><a href={registrationUrl} target="_blank" rel="noreferrer">報名表單</a><a href={lineUrl} target="_blank" rel="noreferrer">LINE@</a><a href={programUrl} target="_blank" rel="noreferrer">碩士班介紹</a><a href={mapUrl} target="_blank" rel="noreferrer">Google 地圖</a><a href="https://www.facebook.com/profile.php?id=61577588704155" target="_blank" rel="noreferrer">Facebook</a></div><div className={styles.footerStatement}><span>MUSIC</span><i>→</i><span>LEADERSHIP</span><i>→</i><span>MINISTRY</span></div></footer>
     <aside className={styles.mobileRegisterBar} aria-label="手機版快速報名"><span><b>10.12–13</b><small>限額 40 名</small></span><a href={registrationUrl} target="_blank" rel="noreferrer">立即報名 ↗</a></aside>
