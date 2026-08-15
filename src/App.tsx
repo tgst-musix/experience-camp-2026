@@ -83,6 +83,7 @@ function PeopleCarousel() {
   const viewport = useRef<HTMLDivElement>(null);
   const frame = useRef<number | undefined>(undefined);
   const settleTimer = useRef<number | undefined>(undefined);
+  const navigationIndex = useRef(1);
   const [activeDisplay, setActiveDisplay] = useState(1);
   const loopPeople = [people[people.length - 1], ...people, people[0]];
   const centerCard = (displayIndex: number, behavior: ScrollBehavior = "smooth") => {
@@ -93,12 +94,14 @@ function PeopleCarousel() {
   };
   const normalizeLoop = (displayIndex: number) => {
     if (displayIndex === 0) {
+      navigationIndex.current = people.length;
       setActiveDisplay(people.length);
       centerCard(people.length, "auto");
     } else if (displayIndex === people.length + 1) {
+      navigationIndex.current = 1;
       setActiveDisplay(1);
       centerCard(1, "auto");
-    }
+    } else navigationIndex.current = displayIndex;
   };
   const syncActive = () => {
     window.cancelAnimationFrame(frame.current ?? 0);
@@ -119,7 +122,11 @@ function PeopleCarousel() {
     });
   };
   const go = (direction: -1 | 1) => {
-    const nextDisplay = activeDisplay + direction;
+    let currentDisplay = navigationIndex.current;
+    if (currentDisplay <= 0) currentDisplay = people.length;
+    if (currentDisplay >= people.length + 1) currentDisplay = 1;
+    const nextDisplay = currentDisplay + direction;
+    navigationIndex.current = nextDisplay;
     setActiveDisplay(nextDisplay);
     centerCard(nextDisplay);
   };
