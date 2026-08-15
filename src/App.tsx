@@ -83,25 +83,15 @@ function PeopleCarousel() {
   const viewport = useRef<HTMLDivElement>(null);
   const frame = useRef<number | undefined>(undefined);
   const settleTimer = useRef<number | undefined>(undefined);
-  const navigationIndex = useRef(1);
-  const [activeDisplay, setActiveDisplay] = useState(1);
-  const loopPeople = [people[people.length - 1], ...people, people[0]];
+  const navigationIndex = useRef(people.length);
+  const arrowTarget = useRef<number | null>(null);
+  const [activeDisplay, setActiveDisplay] = useState(people.length);
+  const carouselPeople = [...people, ...people, ...people];
   const centerCard = (displayIndex: number, behavior: ScrollBehavior = "smooth") => {
     const root = viewport.current;
     const card = root?.querySelectorAll<HTMLElement>("[data-person-card]")[displayIndex];
     if (!root || !card) return;
     root.scrollTo({ left: card.offsetLeft - (root.clientWidth - card.offsetWidth) / 2, behavior });
-  };
-  const normalizeLoop = (displayIndex: number) => {
-    if (displayIndex === 0) {
-      navigationIndex.current = people.length;
-      setActiveDisplay(people.length);
-      centerCard(people.length, "auto");
-    } else if (displayIndex === people.length + 1) {
-      navigationIndex.current = 1;
-      setActiveDisplay(1);
-      centerCard(1, "auto");
-    } else navigationIndex.current = displayIndex;
   };
   const syncActive = () => {
     window.cancelAnimationFrame(frame.current ?? 0);
@@ -118,26 +108,30 @@ function PeopleCarousel() {
       });
       setActiveDisplay(nextDisplay);
       window.clearTimeout(settleTimer.current);
-      settleTimer.current = window.setTimeout(() => normalizeLoop(nextDisplay), 160);
+      settleTimer.current = window.setTimeout(() => {
+        navigationIndex.current = nextDisplay;
+        arrowTarget.current = null;
+      }, 180);
     });
   };
   const go = (direction: -1 | 1) => {
-    let currentDisplay = navigationIndex.current;
-    if (currentDisplay <= 0) currentDisplay = people.length;
-    if (currentDisplay >= people.length + 1) currentDisplay = 1;
-    const nextDisplay = currentDisplay + direction;
+    const currentDisplay = arrowTarget.current ?? navigationIndex.current;
+    const nextDisplay = Math.max(0, Math.min(carouselPeople.length - 1, currentDisplay + direction));
+    if (nextDisplay === currentDisplay) return;
+    window.clearTimeout(settleTimer.current);
+    arrowTarget.current = nextDisplay;
     navigationIndex.current = nextDisplay;
     setActiveDisplay(nextDisplay);
     centerCard(nextDisplay);
   };
-  useLayoutEffect(() => { centerCard(1, "auto"); }, []);
+  useLayoutEffect(() => { centerCard(people.length, "auto"); }, []);
   useEffect(() => () => { window.cancelAnimationFrame(frame.current ?? 0); window.clearTimeout(settleTimer.current); }, []);
   return <div className={motion.personCarousel} aria-label="師資、音樂特會講師與學姊分享者輪播">
     <div className={motion.carouselViewport} ref={viewport} onScroll={syncActive} tabIndex={0}>
-      <div className={motion.carouselTrack}>{loopPeople.map(({ name, role, image, position, category }, displayIndex) => <article className={`${motion.personCard} ${displayIndex === activeDisplay ? motion.active : ""}`} data-person-card="true" key={`${name}-${displayIndex}`} aria-current={displayIndex === activeDisplay ? "true" : undefined}><PhotoFrame src={image} alt={`${name}照片`} portrait position={position} className={motion.personPhoto} /><div className={motion.personInfo}><small>{category}</small><h3>{name}</h3><p>{role}</p></div></article>)}</div>
+      <div className={motion.carouselTrack}>{carouselPeople.map(({ name, role, image, position, category }, displayIndex) => <article className={`${motion.personCard} ${displayIndex === activeDisplay ? motion.active : ""}`} data-person-card="true" key={`${name}-${displayIndex}`} aria-current={displayIndex === activeDisplay ? "true" : undefined}><PhotoFrame src={image} alt={`${name}照片`} portrait position={position} className={motion.personPhoto} /><div className={motion.personInfo}><small>{category}</small><h3>{name}</h3><p>{role}</p></div></article>)}</div>
     </div>
-    <button className={`${motion.carouselArrow} ${motion.carouselArrowLeft}`} type="button" onClick={() => go(-1)} aria-label="上一位">←</button>
-    <button className={`${motion.carouselArrow} ${motion.carouselArrowRight}`} type="button" onClick={() => go(1)} aria-label="下一位">→</button>
+    <button className={`${motion.carouselArrow} ${motion.carouselArrowLeft}`} type="button" onClick={() => go(-1)} disabled={activeDisplay === 0} aria-label="上一位">←</button>
+    <button className={`${motion.carouselArrow} ${motion.carouselArrowRight}`} type="button" onClick={() => go(1)} disabled={activeDisplay === carouselPeople.length - 1} aria-label="下一位">→</button>
   </div>;
 }
 
