@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import styles from "./home.module.css";
 import motion from "./motion.module.css";
 
@@ -76,40 +76,61 @@ function AnimatedDetails({ className = "", summary, children }: { className?: st
     setMountedOpen(true);
     window.requestAnimationFrame(() => window.requestAnimationFrame(() => setExpanded(true)));
   };
-  return <details className={`${className} ${expanded ? motion.expanded : ""}`} open={mountedOpen} data-reveal="true"><summary onClick={(event) => { event.preventDefault(); toggle(); }} aria-expanded={expanded}>{summary(expanded)}</summary><div className={motion.disclosurePanel}><div>{children}</div></div></details>;
+  return <details className={`${className} ${expanded ? motion.expanded : ""}`} open={mountedOpen}><summary onClick={(event) => { event.preventDefault(); toggle(); }} aria-expanded={expanded}>{summary(expanded)}</summary><div className={motion.disclosurePanel}><div>{children}</div></div></details>;
 }
 
 function PeopleCarousel() {
   const viewport = useRef<HTMLDivElement>(null);
   const frame = useRef<number | undefined>(undefined);
-  const [active, setActive] = useState(0);
+  const settleTimer = useRef<number | undefined>(undefined);
+  const [activeDisplay, setActiveDisplay] = useState(1);
+  const loopPeople = [people[people.length - 1], ...people, people[0]];
+  const centerCard = (displayIndex: number, behavior: ScrollBehavior = "smooth") => {
+    const root = viewport.current;
+    const card = root?.querySelectorAll<HTMLElement>("[data-person-card]")[displayIndex];
+    if (!root || !card) return;
+    root.scrollTo({ left: card.offsetLeft - (root.clientWidth - card.offsetWidth) / 2, behavior });
+  };
+  const normalizeLoop = (displayIndex: number) => {
+    if (displayIndex === 0) {
+      setActiveDisplay(people.length);
+      centerCard(people.length, "auto");
+    } else if (displayIndex === people.length + 1) {
+      setActiveDisplay(1);
+      centerCard(1, "auto");
+    }
+  };
   const syncActive = () => {
     window.cancelAnimationFrame(frame.current ?? 0);
     frame.current = window.requestAnimationFrame(() => {
       const root = viewport.current;
       if (!root) return;
       const center = root.scrollLeft + root.clientWidth / 2;
-      let next = 0;
+      let nextDisplay = 0;
       let distance = Number.POSITIVE_INFINITY;
       Array.from(root.querySelectorAll<HTMLElement>("[data-person-card]")).forEach((card, index) => {
         const cardCenter = card.offsetLeft + card.offsetWidth / 2;
         const delta = Math.abs(cardCenter - center);
-        if (delta < distance) { distance = delta; next = index; }
+        if (delta < distance) { distance = delta; nextDisplay = index; }
       });
-      setActive(next);
+      setActiveDisplay(nextDisplay);
+      window.clearTimeout(settleTimer.current);
+      settleTimer.current = window.setTimeout(() => normalizeLoop(nextDisplay), 160);
     });
   };
-  const goTo = (index: number) => {
-    const safeIndex = Math.max(0, Math.min(people.length - 1, index));
-    viewport.current?.querySelectorAll<HTMLElement>("[data-person-card]")[safeIndex]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-    setActive(safeIndex);
+  const go = (direction: -1 | 1) => {
+    const nextDisplay = activeDisplay + direction;
+    setActiveDisplay(nextDisplay);
+    centerCard(nextDisplay);
   };
-  useEffect(() => () => window.cancelAnimationFrame(frame.current ?? 0), []);
+  useLayoutEffect(() => { centerCard(1, "auto"); }, []);
+  useEffect(() => () => { window.cancelAnimationFrame(frame.current ?? 0); window.clearTimeout(settleTimer.current); }, []);
   return <div className={motion.personCarousel} aria-label="師資、音樂特會講師與學姊分享者輪播">
     <div className={motion.carouselViewport} ref={viewport} onScroll={syncActive} tabIndex={0}>
-      <div className={motion.carouselTrack}>{people.map(({ name, role, image, position, category }, index) => <article className={`${motion.personCard} ${index === active ? motion.active : ""}`} data-person-card="true" key={name} aria-current={index === active ? "true" : undefined}><PhotoFrame src={image} alt={`${name}照片`} portrait position={position} className={motion.personPhoto} /><div className={motion.personInfo}><small>{category}</small><h3>{name}</h3><p>{role}</p></div></article>)}</div>
+      <div className={motion.carouselTrack}>{loopPeople.map(({ name, role, image, position, category }, displayIndex) => <article className={`${motion.personCard} ${displayIndex === activeDisplay ? motion.active : ""}`} data-person-card="true" key={`${name}-${displayIndex}`} aria-current={displayIndex === activeDisplay ? "true" : undefined}><PhotoFrame src={image} alt={`${name}照片`} portrait position={position} className={motion.personPhoto} /><div className={motion.personInfo}><small>{category}</small><h3>{name}</h3><p>{role}</p></div></article>)}</div>
     </div>
-    <div className={motion.carouselControls}><button type="button" onClick={() => goTo(active - 1)} disabled={active === 0} aria-label="上一位">←</button><span className={motion.carouselCount}>{String(active + 1).padStart(2, "0")} / {String(people.length).padStart(2, "0")}</span><button type="button" onClick={() => goTo(active + 1)} disabled={active === people.length - 1} aria-label="下一位">→</button></div>
+    <button className={`${motion.carouselArrow} ${motion.carouselArrowLeft}`} type="button" onClick={() => go(-1)} aria-label="上一位">←</button>
+    <button className={`${motion.carouselArrow} ${motion.carouselArrowRight}`} type="button" onClick={() => go(1)} aria-label="下一位">→</button>
   </div>;
 }
 
@@ -161,7 +182,7 @@ export default function Home() {
     <section className={`${styles.section} ${styles.experience}`} id="experience"><div className={styles.sectionHeading}><p className={styles.eyebrow}>TWO DAYS · THREE DISCOVERIES</p><h2>兩天體驗，<br />帶你看見<span>未來的可能</span></h2></div><div className={styles.experienceGrid}><article><span>01</span><div><p>走進真實課堂</p><h3>親身感受學習現場</h3><small>感受課堂方式、師生互動與校園學習環境。</small></div></article><article><span>02</span><div><p>看見整合教育</p><h3>連結音樂、神學與禮拜</h3><small>理解音樂專業、神學思考、禮拜實踐與教會服事如何彼此連結。</small></div></article><article><span>03</span><div><p>分辨服事方向</p><h3>更具體思考你的下一步</h3><small>透過課程、禮拜、分享與交流，思考是否需要進一步裝備。</small></div></article></div></section>
     <section className={`${styles.section} ${styles.learning}`}><div className={`${styles.learningVisual} ${styles.revealFromLeft}`} data-reveal="true"><div className={styles.learningPhotoCollage}><img className={styles.learningMainPhoto} src={asset("photos/learning-classroom-graded-v2.webp")} alt="台灣神學院教室中的課堂實景" loading="lazy" /><img className={styles.learningInsetPhoto} src={asset("photos/learning-organ-graded-v2.webp")} alt="尚傑生老師於管風琴前示範" loading="lazy" /><span>真實課堂 × 專業實作</span></div><div className={styles.musicWords}><span>MUSIC</span><span>THEOLOGY</span><span>WORSHIP</span></div></div><div className={styles.revealFromRight} data-reveal="true"><p className={styles.eyebrow}>LEARNING EXPERIENCE</p><h2>不只是學音樂，<br />而是理解<span>如何服事</span></h2><div className={styles.learningList}><div><b>神學思考</b><span>神學與音樂、神學導論、新約導論</span></div><div><b>音樂專業</b><span>聲樂、手鐘、管風琴、詩班排練</span></div><div><b>禮拜實踐</b><span>禮拜程序演練、全校大禮拜</span></div><div><b>服事與分辨</b><span>事工分享、教牧價值、Q&A、音樂特會</span></div></div></div></section>
 
-    <section className={`${styles.section} ${styles.schedule}`} id="schedule"><div className={`${styles.sectionHeading} ${styles.scheduleHeading}`}><p className={styles.eyebrow}>SCHEDULE</p><h2>兩日完整日程</h2><p>先看當日重點，再展開完整時程。課程與場地可能依實際安排微調，最新資訊以主辦單位公告為準。</p></div><div className={styles.dayCards}><AnimatedDetails className={motion.dropCard} summary={(expanded) => <><span className={styles.dayNumber}>01</span><span><small>10 月 12 日（一）</small><b>音樂專業、詩班排練<br />與音樂特會</b></span><em><span>{expanded ? "收回完整時程" : "查看完整時程"}</span><i className={motion.toggleIcon} aria-hidden="true">＋</i></em></>}><ScheduleRows items={dayOne} /></AnimatedDetails><AnimatedDetails className={motion.dropCard} summary={(expanded) => <><span className={styles.dayNumber}>02</span><span><small>10 月 13 日（二）</small><b>神學課程、事工分享<br />與全校禮拜</b></span><em><span>{expanded ? "收回完整時程" : "查看完整時程"}</span><i className={motion.toggleIcon} aria-hidden="true">＋</i></em></>}><ScheduleRows items={dayTwo} /></AnimatedDetails></div></section>
+    <section className={`${styles.section} ${styles.schedule}`} id="schedule"><div className={`${styles.sectionHeading} ${styles.scheduleHeading}`}><p className={styles.eyebrow}>SCHEDULE</p><h2>兩日完整日程</h2><p>先看當日重點，再展開完整時程。課程與場地可能依實際安排微調，最新資訊以主辦單位公告為準。</p></div><div className={styles.dayCards}><div className={motion.dropCard} data-reveal="true"><AnimatedDetails summary={(expanded) => <><span className={styles.dayNumber}>01</span><span><small>10 月 12 日（一）</small><b>音樂專業、詩班排練<br />與音樂特會</b></span><em><span>{expanded ? "收回完整時程" : "查看完整時程"}</span><i className={motion.toggleIcon} aria-hidden="true">＋</i></em></>}><ScheduleRows items={dayOne} /></AnimatedDetails></div><div className={motion.dropCard} data-reveal="true"><AnimatedDetails summary={(expanded) => <><span className={styles.dayNumber}>02</span><span><small>10 月 13 日（二）</small><b>神學課程、事工分享<br />與全校禮拜</b></span><em><span>{expanded ? "收回完整時程" : "查看完整時程"}</span><i className={motion.toggleIcon} aria-hidden="true">＋</i></em></>}><ScheduleRows items={dayTwo} /></AnimatedDetails></div></div></section>
 
     <section className={`${styles.section} ${styles.faculty}`} id="faculty"><div className={`${styles.sectionHeading} ${styles.facultyHeading}`}><p className={styles.eyebrow}>FACULTY &amp; GUIDES</p><h2>陪你走進真實的<br /><span>學習現場</span></h2><p className={styles.facultySubtitle}>從神學、聲樂、手鐘、管風琴到詩班排練，由各領域師資帶你實際走進教會音樂的學習現場。</p></div><PeopleCarousel /></section>
     <section className={`${styles.section} ${styles.program}`}><div className={styles.revealFromLeft} data-reveal="true"><p className={styles.eyebrow}>CHURCH MUSIC MASTER</p><h2>在音樂、神學與教會之間，<br />成為<span>連結的橋樑</span></h2><p>教會音樂的裝備不只關乎演奏與歌唱，也包含禮拜理解、神學思考、溝通協作與教會現場的實踐。</p><a className={styles.inlineLink} href={programUrl} target="_blank" rel="noreferrer">認識碩士班課程 ↗</a></div><div className={`${styles.programPhotoReveal} ${styles.revealFromRight}`} data-reveal="true"><PhotoFrame src={asset("photos/campus-chapel.webp")} alt="台灣神學院禮拜堂與校園景觀" /></div></section>
