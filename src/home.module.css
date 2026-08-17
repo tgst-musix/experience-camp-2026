@@ -113,3 +113,23 @@
   .kicker{white-space:nowrap}
   .heroLead{max-width:680px;text-wrap:pretty}
 }
+
+/* Fill the campus-photo frame at every layout ratio and strengthen gold on light panels. */
+.programPhotoReveal{
+  width:100%;
+  aspect-ratio:4/3;
+}
+.programPhotoReveal>.photoFrame{
+  width:100%;
+  height:100%;
+  min-height:0;
+}
+.programPhotoReveal>.photoFrame img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.learning h2 span,.program h2 span{color:#98600f}
+@media(max-width:680px){.programPhotoReveal{aspect-ratio:4/5}}
