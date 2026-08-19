@@ -5,7 +5,7 @@ import styles from "./home.module.css";
 import motion from "./motion.module.css";
 
 const asset = (path: string) => `${import.meta.env.BASE_URL}${path}`;
-const registrationUrl = "https://forms.gle/puZ23ZyC2fFt198k8";
+const registrationUrl = "https://forms.gle/Fkzcgpt6GuJzU9kn9";
 const lineUrl = "https://lin.ee/PPUiMQU";
 const programUrl = "https://www.tgst.edu.tw/p/412-1001-1255.php?Lang=zh-tw";
 const mapUrl = "https://maps.app.goo.gl/HdzgDZ2yx5a7KpdX9";
