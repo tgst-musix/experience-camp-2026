@@ -133,3 +133,75 @@
 }
 .learning h2 span,.program h2 span{color:#98600f}
 @media(max-width:680px){.programPhotoReveal{aspect-ratio:4/5}}
+
+
+/* Scripture reflection between practical information and the final invitation. */
+.scripture{
+  position:relative;
+  display:grid;
+  place-items:center;
+  min-height:520px;
+  padding:110px clamp(22px,7vw,110px);
+  overflow:hidden;
+  border-bottom:1px solid rgba(19,25,36,.17);
+  background:
+    radial-gradient(circle at 18% 22%,rgba(195,154,88,.16),transparent 28%),
+    radial-gradient(circle at 82% 78%,rgba(195,154,88,.12),transparent 30%),
+    var(--paper);
+  color:var(--navy);
+  text-align:center;
+}
+.scripture::before,.scripture::after{
+  content:"";
+  position:absolute;
+  width:min(320px,34vw);
+  height:1px;
+  background:rgba(152,96,15,.42);
+}
+.scripture::before{top:68px;left:clamp(22px,8vw,120px);transform:rotate(-4deg)}
+.scripture::after{right:clamp(22px,8vw,120px);bottom:68px;transform:rotate(-4deg)}
+.scriptureInner{position:relative;z-index:1;max-width:980px;margin:0 auto}
+.scriptureMark{
+  display:block;
+  height:62px;
+  color:var(--gold);
+  font-family:var(--font-display);
+  font-size:96px;
+  line-height:1;
+  opacity:.72;
+}
+.scriptureQuote{
+  margin:0;
+  font-family:var(--font-display);
+  font-size:clamp(28px,3.2vw,48px);
+  font-weight:700;
+  line-height:1.62;
+  letter-spacing:.015em;
+}
+.scriptureQuote span{display:block;text-wrap:balance}
+.scripturePromise{
+  display:inline-block;
+  margin-top:10px;
+  color:#98600f;
+  font-family:var(--font-handwriting);
+  font-size:1.18em;
+  font-weight:400;
+  letter-spacing:.05em;
+  transform:rotate(-1deg);
+}
+.scriptureReference{
+  margin:30px 0 0;
+  color:var(--muted);
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:.2em;
+}
+@media(max-width:680px){
+  .scripture{min-height:470px;padding:82px 22px}
+  .scripture::before{top:45px}
+  .scripture::after{bottom:45px}
+  .scriptureMark{height:48px;font-size:76px}
+  .scriptureQuote{font-size:clamp(25px,7.2vw,32px);line-height:1.65}
+  .scripturePromise{margin-top:14px;font-size:1.22em}
+  .scriptureReference{margin-top:24px}
+}
