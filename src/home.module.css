@@ -186,8 +186,7 @@
   font-family:"Iansui","Noto Serif TC",serif;
   font-size:1.18em;
   font-weight:400;
-  letter-spacing:.05em;
-  transform:rotate(-1deg);
+  letter-spacing:.025em;
 }
 .scriptureReference{
   margin:30px 0 0;
