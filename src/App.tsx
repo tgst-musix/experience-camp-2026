@@ -143,6 +143,20 @@ export default function Home() {
   const [fontsReady, setFontsReady] = useState(false);
 
   useEffect(() => {
+    const trackRegistrationClick = (event: MouseEvent) => {
+      const target = event.target;
+      const link = target instanceof Element ? target.closest<HTMLAnchorElement>(`a[href="${registrationUrl}"]`) : null;
+      if (!link) return;
+      window.gtag?.("event", "registration_click", {
+        link_text: link.textContent?.trim() ?? "",
+        link_url: registrationUrl,
+      });
+    };
+    document.addEventListener("click", trackRegistrationClick);
+    return () => document.removeEventListener("click", trackRegistrationClick);
+  }, []);
+
+  useEffect(() => {
     let active = true;
     const timeout = new Promise<void>((resolve) => window.setTimeout(resolve, 4500));
     const loadFonts = Promise.all([
@@ -164,7 +178,7 @@ export default function Home() {
   }, [fontsReady]);
 
   const shareSite = async () => { const data = { title: "2026 教會音樂碩士班體驗營", text: "兩天走進真實課堂、禮拜與校園生活，分辨你的下一步。", url: window.location.href }; try { if (navigator.share) await navigator.share(data); else await navigator.clipboard.writeText(window.location.href); } catch { /* 使用者取消 */ } };
-  const copyRegistrationLink = async () => { try { await navigator.clipboard.writeText(registrationUrl); } catch { const field = document.createElement("textarea"); field.value = registrationUrl; field.style.position = "fixed"; field.style.opacity = "0"; document.body.appendChild(field); field.select(); document.execCommand("copy"); field.remove(); } setCopyNotice(true); window.setTimeout(() => setCopyNotice(false), 1000); };
+  const copyRegistrationLink = async () => { window.gtag?.("event", "registration_link_copy", { link_url: registrationUrl }); try { await navigator.clipboard.writeText(registrationUrl); } catch { const field = document.createElement("textarea"); field.value = registrationUrl; field.style.position = "fixed"; field.style.opacity = "0"; document.body.appendChild(field); field.select(); document.execCommand("copy"); field.remove(); } setCopyNotice(true); window.setTimeout(() => setCopyNotice(false), 1000); };
 
   if (!fontsReady) return <div className={motion.fontGate} role="status" aria-live="polite"><div className={motion.fontGateInner}><span className={motion.fontGateMark} aria-hidden="true" /><p>LOADING TYPOGRAPHY</p></div></div>;
 
